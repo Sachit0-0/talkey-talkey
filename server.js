@@ -74,8 +74,10 @@ app.prepare().then(() => {
     });
   });
 
-  server.listen(3000, (err) => {
-    if (err) throw err;
-    console.log("> Ready on http://localhost:3000");
+  const PORT = process.env.PORT || 3000; // Use the port from the environment, or fallback to 3000
+  server.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
   });
+  
+ 
 });
