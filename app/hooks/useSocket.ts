@@ -8,17 +8,19 @@ interface Message {
   text: string;
   timestamp: Date;
   room: string;
-
-  
 }
 
-const debounce = (func: Function, delay: number) => {
+// Define the debounce function with more specific types
+// Define debounce function with proper typing for the arguments
+const debounce = (func: (isTyping: boolean) => void, delay: number) => {
   let timeoutId: NodeJS.Timeout;
-  return (...args: any[]) => {
+  return (isTyping: boolean) => {
     clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func(...args), delay);
+    timeoutId = setTimeout(() => func(isTyping), delay);
   };
 };
+
+
 export const useSocket = (username: string) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -28,15 +30,15 @@ export const useSocket = (username: string) => {
   const [availableRooms, setAvailableRooms] = useState<string[]>([]);
   const [currentRoom, setCurrentRoom] = useState<string>('general');
 
+  // Fix: debounce function with proper typing
   const debouncedSendTypingStatus = useCallback(
     debounce((isTyping: boolean) => {
       if (socket) {
         socket.emit(isTyping ? 'typing' : 'stop typing', username);
       }
     }, 300),
-    [socket, username]
+    [socket, username] // Dependencies include socket and username
   );
-
 
   const addSystemMessage = useCallback((text: string, roomId?: string) => {
     setMessages((prevMessages) => [
@@ -100,7 +102,7 @@ export const useSocket = (username: string) => {
     return () => {
       socketIo.disconnect();
     };
-  }, [username, addSystemMessage]);
+  }, [username, addSystemMessage]); // Ensuring dependencies are correct
 
   const sendTypingStatus = (isTyping: boolean) => {
     if (socket) {
@@ -113,6 +115,7 @@ export const useSocket = (username: string) => {
       socket.emit('stop typing', username);
     }
   }, [socket, username]);
+
   const sendMessage = (text: string) => {
     if (socket) {
       const message: Message = {
@@ -138,9 +141,18 @@ export const useSocket = (username: string) => {
     }
   }, [socket]);
 
-  return { isConnected, messages, sendMessage, users, typingUsers, sendTypingStatus, debouncedSendTypingStatus, stopTypingImmediately,  currentRoom,
+  return {
+    isConnected,
+    messages,
+    sendMessage,
+    users,
+    typingUsers,
+    sendTypingStatus,
+    debouncedSendTypingStatus,
+    stopTypingImmediately,
+    currentRoom,
     availableRooms,
     createRoom,
     joinRoom
-};
+  };
 };
